@@ -1,0 +1,10 @@
+streamlit
+requests
+beautifulsoup4
+python-whois
+urllib3
+tldextract
+python-dotenv
+selenium
+webdriver-manager
+Pillow

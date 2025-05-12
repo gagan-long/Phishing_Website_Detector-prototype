@@ -1,0 +1,22 @@
+{
+    "domains": {
+      "malicious-site.com": {
+        "reason": "Known phishing campaign",
+        "date_added": "2023-01-15",
+        "severity": "high"
+      },
+      "phishing-example.org": {
+        "reason": "Impersonating financial institution",
+        "date_added": "2023-03-22",
+        "severity": "critical"
+      },
+      "fake-login.net": {
+        "reason": "Credential harvesting detected",
+        "date_added": "2023-05-10",
+        "severity": "medium"
+      }
+    },
+    "last_updated": "2023-05-15T14:30:00Z",
+    "source": "Internal Threat Intelligence"
+  }
+  
