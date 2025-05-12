@@ -76,7 +76,7 @@ Go to - https://phishingwebsite-detector-gfbzumnpgev6mwuxdfs25g.streamlit.app/
 
 ## 📸 Screenshots
 
-https://github.com/gagan-long/Phishing_Website-Detector/blob/main/research_paper.pdf
+https://github.com/gagan-long/Phishing_Website_Detector-prototype/tree/main/research_paper
 
 ---
 
