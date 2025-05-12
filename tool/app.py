@@ -564,7 +564,7 @@ def analyze_text(text):
 
 def main():
     st.markdown("<h1 style='color:#ff4b4b;'>🛡️ Phishing Website Detector, Port & Text Scanner</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#31333f;font-size:1.1rem;'>Analyze a website, suspicious text, or message for phishing risk!</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#111178;font-size:1.1rem;'>Analyze a website, suspicious text, or message for phishing risk!</p>", unsafe_allow_html=True)
 
     tab1, tab2, tab3 = st.tabs([
         "🔗 Website/Domain Analysis",
