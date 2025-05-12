@@ -21,6 +21,9 @@ from PIL import Image
 import io
 import time
 
+import base64
+
+
 def extract_dom_clues(url, timeout=10):
     try:
         chrome_options = Options()
@@ -241,25 +244,57 @@ VT_API_KEY = os.getenv("VT_API_KEY", "")
 def check_virustotal_url(url, api_key):
     if not api_key:
         return {"error": "No VirusTotal API key provided."}
-    vt_url = "https://www.virustotal.com/api/v3/urls"
+    
+    # Encode URL for VirusTotal ID
+    url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
+    
+    headers = {
+        "x-apikey": api_key,
+        "Accept": "application/json",
+        "User-Agent": "PhishingDetector/1.0"
+    }
+    
     try:
-        resp = requests.post(vt_url, headers={"x-apikey": api_key}, data={"url": url})
-        if resp.status_code not in (200, 201):
-            return {"error": f"VirusTotal API error: {resp.status_code}"}
-        scan_id = resp.json()["data"]["id"]
-        report_url = f"{vt_url}/{scan_id}"
-        report = requests.get(report_url, headers={"x-apikey": api_key})
+        # Check existing report first (free tier limited to 4 req/min)
+        report_url = f"https://www.virustotal.com/api/v3/urls/{url_id}"
+        report = requests.get(report_url, headers=headers)
+        
+        # If not found, submit for analysis
+        if report.status_code == 404:
+            submit_url = "https://www.virustotal.com/api/v3/urls"
+            data = {"url": url}
+            resp = requests.post(
+                submit_url,
+                headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
+                data=data
+            )
+            
+            if resp.status_code not in (200, 201):
+                return {"error": f"Submission failed: {resp.status_code} - {resp.text}"}
+            
+            # Wait for analysis completion (free tier has delays)
+            time.sleep(15)
+            report = requests.get(report_url, headers=headers)
+        
         if report.status_code != 200:
-            return {"error": f"VirusTotal API error: {report.status_code}"}
-        data = report.json()["data"]["attributes"]
-        stats = data["last_analysis_stats"]
-        verdict = "malicious" if stats.get("malicious", 0) > 0 else "suspicious" if stats.get("suspicious", 0) > 0 else "clean"
+            return {"error": f"Report fetch failed: {report.status_code} - {report.text}"}
+        
+        data = report.json().get("data", {}).get("attributes", {})
+        stats = data.get("last_analysis_stats", {})
+        
+        verdict = "clean"
+        if stats.get("malicious", 0) > 5:
+            verdict = "malicious"
+        elif stats.get("suspicious", 0) > 2 or stats.get("malicious", 0) > 0:
+            verdict = "suspicious"
+            
         return {
             "verdict": verdict,
             "stats": stats,
             "scan_date": data.get("last_analysis_date"),
-            "permalink": f"https://www.virustotal.com/gui/url/{scan_id}"
+            "permalink": f"https://www.virustotal.com/gui/url/{url_id}"
         }
+        
     except Exception as e:
         return {"error": str(e)}
 
@@ -621,22 +656,33 @@ def main():
                     # --- VirusTotal Threat Intelligence ---
                     st.subheader("VirusTotal Threat Intelligence")
                     if VT_API_KEY:
-                        vt_result = check_virustotal_url(url, VT_API_KEY)
-                        if vt_result.get("error"):
-                            st.info(f"VirusTotal: {vt_result['error']}")
-                        else:
-                            verdict = vt_result["verdict"]
-                            stats = vt_result["stats"]
-                            vt_color = "#dc3545" if verdict == "malicious" else "#ffc107" if verdict == "suspicious" else "#28a745"
-                            st.markdown(
-                                f"<div class='metric-container'><h3>VirusTotal Verdict</h3>"
-                                f"<p style='font-size: 1.5rem; font-weight: bold; color: {vt_color};'>{verdict.title()}</p></div>",
-                                unsafe_allow_html=True)
-                            st.write(f"**Malicious:** {stats.get('malicious',0)} | **Suspicious:** {stats.get('suspicious',0)} | "
-                                     f"**Harmless:** {stats.get('harmless',0)} | **Undetected:** {stats.get('undetected',0)}")
-                            st.markdown(f"[View full report on VirusTotal]({vt_result['permalink']})")
+                       vt_result = check_virustotal_url(url, VT_API_KEY)
+                    if vt_result.get("error"):
+                     st.warning(f"VirusTotal: {vt_result['error']}")
                     else:
-                        st.info("VirusTotal threat intelligence available if you set your API key in the .env file.")
+                     verdict = vt_result.get("verdict", "unknown")
+                     stats = vt_result.get("stats", {})
+                     vt_color = (
+                     "#dc3545" if verdict == "malicious"
+                       else "#ffc107" if verdict == "suspicious"
+                      else "#28a745" if verdict == "clean"
+                      else "#6c757d"
+                     )
+                     st.markdown(
+                     f"<div class='metric-container'><h3>VirusTotal Verdict</h3>"
+                     f"<p style='font-size: 1.5rem; font-weight: bold; color: {vt_color};'>{verdict.title()}</p></div>",
+                     unsafe_allow_html=True
+                        )
+                     st.write(
+                       f"**Malicious:** {stats.get('malicious', 0)} | "
+                        f"**Suspicious:** {stats.get('suspicious', 0)} | "
+                       f"**Harmless:** {stats.get('harmless', 0)} | "
+                        f"**Undetected:** {stats.get('undetected', 0)}"
+                           )
+                    if vt_result.get("permalink"):
+                        st.markdown(f"[View full report on VirusTotal]({vt_result['permalink']})")
+                    else:
+                     st.info("VirusTotal threat intelligence is available if you set your API key in the .env file.")
 
                     # --- Website Screenshot ---
                     st.subheader("Website Screenshot")

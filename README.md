@@ -49,6 +49,8 @@ pip install -r requirements.txt
 3. **(Optional) Add `.env` for VirusTotal API:**
 VT_API_KEY=your_virustotal_api_key
 
+Activate the virtual environment: source venv/bin/activate.bat or .venv\Scripts\activate.ps1
+
 4. **Run the App:**
 streamlit run app.py
 
