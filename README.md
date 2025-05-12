@@ -56,7 +56,7 @@ streamlit run app.py
 
 OR
 
-Go to - https://phishingwebsite-detector-gfbzumnpgev6mwuxdfs25g.streamlit.app/
+Go to - https://phishingwebsitedetector-prototype-o3xtyexgblxajfoawjfzrx.streamlit.app/
 
 ---
 
