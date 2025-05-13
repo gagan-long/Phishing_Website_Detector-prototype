@@ -697,20 +697,24 @@ def main():
                     st.subheader("Website Screenshot")
                     screenshot = None
                     screenshot_error = None
-                    if url.lower().startswith("http"):
-                        with st.spinner("Taking screenshot..."):
-                            screenshot, screenshot_error = take_screenshot(url)
-                    if screenshot:
-                        st.image(screenshot, caption="Website Screenshot", use_column_width=True)
-                    else:
-                        st.info("Screenshot unavailable." + (f" Error: {screenshot_error}" if screenshot_error else ""))
 
-                    st.subheader("Technical Details")
-                    st.markdown("<div class='details-list'><ul>", unsafe_allow_html=True)
+                    if url and url.lower().startswith("http"):
+                      with st.spinner("Taking screenshot..."):
+                       screenshot, screenshot_error = take_screenshot(url)
+                      if screenshot:
+                       st.image(screenshot, caption="Website Screenshot", use_column_width=True)
+                      else:
+                        st.warning("Screenshot unavailable." + (f" Error: {screenshot_error}" if screenshot_error else ""))
+                    else:
+                      st.info("Enter a valid URL (starting with http or https) to take a screenshot.")
+
+                      st.subheader("Technical Details")
+                      st.markdown("<div class='details-list'><ul>", unsafe_allow_html=True)
                     for key, value in details.items():
-                        if key not in ['found_paths', 'lookalike_brands']:
-                            st.markdown(f"<li><strong>{key}:</strong> {value}</li>", unsafe_allow_html=True)
-                    st.markdown("</ul></div>", unsafe_allow_html=True)
+                     if key not in ['found_paths', 'lookalike_brands']:
+                       st.markdown(f"<li><strong>{key}:</strong> {value}</li>", unsafe_allow_html=True)
+                       st.markdown("</ul></div>", unsafe_allow_html=True)
+
 
                                         # --- Advanced DOM Clues ---
                     st.subheader("Advanced DOM Clues")
