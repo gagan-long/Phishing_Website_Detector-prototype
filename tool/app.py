@@ -20,8 +20,11 @@ from selenium.webdriver.common.by import By
 from PIL import Image
 import io
 import time
-
 import base64
+
+from selenium.webdriver.chrome.service import Service
+
+
 
 
 def extract_dom_clues(url, timeout=10):
@@ -217,20 +220,26 @@ def update_blacklist_from_feeds():
 
 
 # --- Screenshot Helper ---
+
 def take_screenshot(url, width=1200, height=900, timeout=10):
     try:
-        chrome_options = Options()
+        chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--disable-gpu")
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument(f"--window-size={width},{height}")
         chrome_options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+        
+        # Use Service() for proper driver initialization
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        
         driver.set_page_load_timeout(timeout)
         driver.get(url)
-        time.sleep(2)  # Give time for page to load
+        time.sleep(2)  # Allow JavaScript/async content to load
         png = driver.get_screenshot_as_png()
         driver.quit()
+        
         image = Image.open(io.BytesIO(png))
         return image, None
     except Exception as e:
