@@ -27,6 +27,7 @@ from selenium.webdriver.chrome.service import Service
 
 
 
+
 def extract_dom_clues(url, timeout=10):
     try:
         chrome_options = Options()
@@ -35,22 +36,20 @@ def extract_dom_clues(url, timeout=10):
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--window-size=1200,900")
-        driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
+
+        # Proper driver initialization for Selenium 4.6+
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+
         driver.set_page_load_timeout(timeout)
         driver.get(url)
-        time.sleep(2)
+        time.sleep(2)  # Allow page to load
 
-        from selenium.webdriver.common.by import By
         forms = driver.find_elements(By.TAG_NAME, "form")
         password_inputs = driver.find_elements(By.XPATH, "//input[@type='password']")
         external_scripts = driver.find_elements(By.XPATH, "//script[@src]")
         images = driver.find_elements(By.TAG_NAME, "img")
         visible_text = driver.find_element(By.TAG_NAME, "body").text.lower()
-
-        password_inputs = driver.find_elements("xpath", "//input[@type='password']")
-        external_scripts = driver.find_elements("xpath", "//script[@src]")
-        images = driver.find_elements("tag name", "img")
-        visible_text = driver.find_element("tag name", "body").text.lower()
 
         suspicious_keywords = [
             "password", "login", "verify", "account", "bank", "urgent", "reset", "confirm", "ssn", "credit card"
@@ -67,7 +66,6 @@ def extract_dom_clues(url, timeout=10):
         }, None
     except Exception as e:
         return None, str(e)
-
 
 def phishing_quiz():
     st.subheader("🎓 Phishing Awareness Self-Test")
@@ -721,45 +719,47 @@ def main():
                     st.subheader("Advanced DOM Clues")
                     dom_clues, dom_error = extract_dom_clues(url)
                     if dom_clues:
-                        st.write(f"**Forms on page:** {dom_clues['forms']}")
-                        st.write(f"**Password fields:** {dom_clues['password_inputs']}")
-                        st.write(f"**External scripts:** {dom_clues['external_scripts']}")
-                        st.write(f"**Images (possible logos):** {dom_clues['images']}")
-                        if dom_clues['found_keywords']:
-                            st.warning(f"Suspicious keywords found: {', '.join(dom_clues['found_keywords'])}")
-                        else:
-                            st.success("No suspicious keywords found in visible text.")
+                      st.write(f"**Forms on page:** {dom_clues.get('forms', 0)}")
+                      st.write(f"**Password fields:** {dom_clues.get('password_inputs', 0)}")
+                      st.write(f"**External scripts:** {dom_clues.get('external_scripts', 0)}")
+                      st.write(f"**Images (possible logos):** {dom_clues.get('images', 0)}")
+                      found_keywords = dom_clues.get('found_keywords', [])
+                      if found_keywords:
+                        st.warning(f"Suspicious keywords found: {', '.join(found_keywords)}")
+                      else:
+                        st.success("No suspicious keywords found in visible text.")
                     else:
-                        st.info("DOM clue extraction unavailable." + (f" Error: {dom_error}" if dom_error else ""))
+                       st.info(f"DOM clue extraction unavailable.{f' Error: {dom_error}' if dom_error else ''}")
 
-
-                    st.subheader("SSL/TLS Certificate Transparency")
+                       st.subheader("SSL/TLS Certificate Transparency")
                     if details.get('ssl_issuer') and details['ssl_issuer'] != 'N/A':
-                        st.info(f"Issuer: **{details['ssl_issuer']}**")
-                        st.write(f"Valid from: `{details['ssl_valid_from']}` to `{details['ssl_valid_to']}`")
-                        st.write(f"Certificate age: **{details['ssl_age_days']} days**")
-                        st.write(f"Days left until expiry: **{details['ssl_days_left']} days**")
-                        if details['ssl_is_new'] == "Yes":
-                            st.warning("⚠️ Certificate is very new (issued in the last 30 days).")
-                        if details.get('ssl_issuer_warning'):
+                       st.info(f"Issuer: **{details['ssl_issuer']}**")
+                       st.write(f"Valid from: `{details.get('ssl_valid_from', 'N/A')}` to `{details.get('ssl_valid_to', 'N/A')}`")
+                       st.write(f"Certificate age: **{details.get('ssl_age_days', 'N/A')} days**")
+                       st.write(f"Days left until expiry: **{details.get('ssl_days_left', 'N/A')} days**")
+                       if details.get('ssl_is_new') == "Yes":
+                         st.warning("⚠️ Certificate is very new (issued in the last 30 days).")
+                         if details.get('ssl_issuer_warning'):
                             st.warning(f"⚠️ {details['ssl_issuer_warning']}")
-                    else:
-                        st.info("No SSL/TLS certificate details available.")
+                         else:
+                            st.info("No SSL/TLS certificate details available.")
 
-                    st.subheader("Typosquatting & Lookalike Domain Check")
-                    if details.get('lookalike_brands'):
-                        st.warning(f"This domain is a lookalike or typo of: {', '.join(details['lookalike_brands'])}")
-                    else:
-                        st.success("No lookalike or typosquatting detected for popular brands.")
+                            st.subheader("Typosquatting & Lookalike Domain Check")
+                         if details.get('lookalike_brands'):
+                            st.warning(f"This domain is a lookalike or typo of: {', '.join(details['lookalike_brands'])}")
+                         else:
+                            st.success("No lookalike or typosquatting detected for popular brands.")
 
-                    st.subheader("Discovered Paths")
-                    if details.get('found_paths'):
-                        st.markdown("<div class='paths-list'><ul>", unsafe_allow_html=True)
-                        for path in details['found_paths']:
-                            st.markdown(f"<li><code>{url.rstrip('/')}{path}</code></li>", unsafe_allow_html=True)
-                        st.markdown("</ul></div>", unsafe_allow_html=True)
+                            st.subheader("Discovered Paths")
+                            found_paths = details.get('found_paths', [])
+                            if found_paths:
+                             st.markdown("<div class='paths-list'><ul>", unsafe_allow_html=True)
+                            for path in found_paths:
+                              st.markdown(f"<li><code>{url.rstrip('/')}{path}</code></li>", unsafe_allow_html=True)
+                              st.markdown("</ul></div>", unsafe_allow_html=True)
                     else:
-                        st.warning("No common paths discovered")
+                      st.warning("No common paths discovered")
+
                     # --- Port Scan Section ---
                     if port_scan_enabled:
                       st.subheader(f"Port Scan Results ({port_range[0]}–{port_range[1]})")
