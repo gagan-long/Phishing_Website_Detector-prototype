@@ -614,20 +614,15 @@ def main():
         "🎓 Phishing Self-Test"
     ])
 
-
-   
-
-
     # --- Website/Domain Tab ---
     with tab1:
         if st.button("Update Blacklist from Threat Feeds"):
-         with st.spinner("Updating blacklist from multiple feeds..."):
-            success, msg = update_blacklist_from_feeds()
-            if success:
-             st.success(msg)
-            else:
-             st.error(msg)
-
+            with st.spinner("Updating blacklist from multiple feeds..."):
+                success, msg = update_blacklist_from_feeds()
+                if success:
+                    st.success(msg)
+                else:
+                    st.error(msg)
 
         url = st.text_input("Enter URL to analyze:", placeholder="https://example.com")
         port_scan_enabled = st.checkbox("Perform Port Scan (for open ports)", value=False)
@@ -639,6 +634,7 @@ def main():
             with colp2:
                 port_end = st.number_input("Port range end", min_value=1, max_value=65535, value=1024)
             port_range = (int(port_start), int(port_end))
+
         if st.button("Analyze", key="analyze_url"):
             if url:
                 with st.spinner("Analyzing website..."):
@@ -656,145 +652,155 @@ def main():
                     st.subheader("Analysis Results")
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.markdown(f"<div class='metric-container'><h3>Risk Score</h3><p style='font-size: 2rem; font-weight: bold;'>{risk_score}/100</p></div>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"<div class='metric-container'><h3>Risk Score</h3><p style='font-size: 2rem; font-weight: bold;'>{risk_score}/100</p></div>",
+                            unsafe_allow_html=True
+                        )
                     with col2:
-                        st.markdown(f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {pred_color};'>{prediction}</p></div>", unsafe_allow_html=True)
+                        st.markdown(
+                            f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {pred_color};'>{prediction}</p></div>",
+                            unsafe_allow_html=True
+                        )
 
                     # --- VirusTotal Threat Intelligence ---
                     st.subheader("VirusTotal Threat Intelligence")
                     if VT_API_KEY:
-                       vt_result = check_virustotal_url(url, VT_API_KEY)
-                    if vt_result.get("error"):
-                     st.warning(f"VirusTotal: {vt_result['error']}")
+                        vt_result = check_virustotal_url(url, VT_API_KEY)
+                        if vt_result.get("error"):
+                            st.warning(f"VirusTotal: {vt_result['error']}")
+                        else:
+                            verdict = vt_result.get("verdict", "unknown")
+                            stats = vt_result.get("stats", {})
+                            vt_color = (
+                                "#dc3545" if verdict == "malicious"
+                                else "#ffc107" if verdict == "suspicious"
+                                else "#28a745" if verdict == "clean"
+                                else "#6c757d"
+                            )
+                            st.markdown(
+                                f"<div class='metric-container'><h3>VirusTotal Verdict</h3>"
+                                f"<p style='font-size: 1.5rem; font-weight: bold; color: {vt_color};'>{verdict.title()}</p></div>",
+                                unsafe_allow_html=True
+                            )
+                            st.write(
+                                f"**Malicious:** {stats.get('malicious', 0)} | "
+                                f"**Suspicious:** {stats.get('suspicious', 0)} | "
+                                f"**Harmless:** {stats.get('harmless', 0)} | "
+                                f"**Undetected:** {stats.get('undetected', 0)}"
+                            )
+                            if vt_result.get("permalink"):
+                                st.markdown(f"[View full report on VirusTotal]({vt_result['permalink']})")
                     else:
-                     verdict = vt_result.get("verdict", "unknown")
-                     stats = vt_result.get("stats", {})
-                     vt_color = (
-                     "#dc3545" if verdict == "malicious"
-                       else "#ffc107" if verdict == "suspicious"
-                      else "#28a745" if verdict == "clean"
-                      else "#6c757d"
-                     )
-                     st.markdown(
-                     f"<div class='metric-container'><h3>VirusTotal Verdict</h3>"
-                     f"<p style='font-size: 1.5rem; font-weight: bold; color: {vt_color};'>{verdict.title()}</p></div>",
-                     unsafe_allow_html=True
-                        )
-                     st.write(
-                       f"**Malicious:** {stats.get('malicious', 0)} | "
-                        f"**Suspicious:** {stats.get('suspicious', 0)} | "
-                       f"**Harmless:** {stats.get('harmless', 0)} | "
-                        f"**Undetected:** {stats.get('undetected', 0)}"
-                           )
-                    if vt_result.get("permalink"):
-                        st.markdown(f"[View full report on VirusTotal]({vt_result['permalink']})")
-                    else:
-                     st.info("VirusTotal threat intelligence is available if you set your API key in the .env file.")
+                        st.info("VirusTotal threat intelligence is available if you set your API key in the .env file.")
 
                     # --- Website Screenshot ---
                     st.subheader("Website Screenshot")
                     screenshot = None
                     screenshot_error = None
-
                     if url and url.lower().startswith("http"):
-                      with st.spinner("Taking screenshot..."):
-                       screenshot, screenshot_error = take_screenshot(url)
-                      if screenshot:
-                       st.image(screenshot, caption="Website Screenshot", use_container_width=True)
-
-                      else:
-                        st.warning("Screenshot unavailable." + (f" Error: {screenshot_error}" if screenshot_error else ""))
+                        with st.spinner("Taking screenshot..."):
+                            screenshot, screenshot_error = take_screenshot(url)
+                        if screenshot:
+                            st.image(screenshot, caption="Website Screenshot", use_container_width=True)
+                        else:
+                            st.warning("Screenshot unavailable." + (f" Error: {screenshot_error}" if screenshot_error else ""))
                     else:
-                      st.info("Enter a valid URL (starting with http or https) to take a screenshot.")
+                        st.info("Enter a valid URL (starting with http or https) to take a screenshot.")
 
-                      st.subheader("Technical Details")
-                      st.markdown("<div class='details-list'><ul>", unsafe_allow_html=True)
+                    # --- Technical Details ---
+                    st.subheader("Technical Details")
+                    st.markdown("<div class='details-list'><ul>", unsafe_allow_html=True)
                     for key, value in details.items():
-                     if key not in ['found_paths', 'lookalike_brands']:
-                       st.markdown(f"<li><strong>{key}:</strong> {value}</li>", unsafe_allow_html=True)
-                       st.markdown("</ul></div>", unsafe_allow_html=True)
+                        if key not in ['found_paths', 'lookalike_brands']:
+                            st.markdown(f"<li><strong>{key}:</strong> {value}</li>", unsafe_allow_html=True)
+                    st.markdown("</ul></div>", unsafe_allow_html=True)
 
-
-                                        # --- Advanced DOM Clues ---
+                    # --- Advanced DOM Clues ---
                     st.subheader("Advanced DOM Clues")
                     dom_clues, dom_error = extract_dom_clues(url)
                     if dom_clues:
-                      st.write(f"**Forms on page:** {dom_clues.get('forms', 0)}")
-                      st.write(f"**Password fields:** {dom_clues.get('password_inputs', 0)}")
-                      st.write(f"**External scripts:** {dom_clues.get('external_scripts', 0)}")
-                      st.write(f"**Images (possible logos):** {dom_clues.get('images', 0)}")
-                      found_keywords = dom_clues.get('found_keywords', [])
-                      if found_keywords:
-                        st.warning(f"Suspicious keywords found: {', '.join(found_keywords)}")
-                      else:
-                        st.success("No suspicious keywords found in visible text.")
+                        st.write(f"**Forms on page:** {dom_clues.get('forms', 0)}")
+                        st.write(f"**Password fields:** {dom_clues.get('password_inputs', 0)}")
+                        st.write(f"**External scripts:** {dom_clues.get('external_scripts', 0)}")
+                        st.write(f"**Images (possible logos):** {dom_clues.get('images', 0)}")
+                        found_keywords = dom_clues.get('found_keywords', [])
+                        if found_keywords:
+                            st.warning(f"Suspicious keywords found: {', '.join(found_keywords)}")
+                        else:
+                            st.success("No suspicious keywords found in visible text.")
                     else:
-                       st.info(f"DOM clue extraction unavailable.{f' Error: {dom_error}' if dom_error else ''}")
+                        st.info(f"DOM clue extraction unavailable.{f' Error: {dom_error}' if dom_error else ''}")
 
-                       st.subheader("SSL/TLS Certificate Transparency")
+                    # --- SSL/TLS Certificate Transparency ---
+                    st.subheader("SSL/TLS Certificate Transparency")
                     if details.get('ssl_issuer') and details['ssl_issuer'] != 'N/A':
-                       st.info(f"Issuer: **{details['ssl_issuer']}**")
-                       st.write(f"Valid from: `{details.get('ssl_valid_from', 'N/A')}` to `{details.get('ssl_valid_to', 'N/A')}`")
-                       st.write(f"Certificate age: **{details.get('ssl_age_days', 'N/A')} days**")
-                       st.write(f"Days left until expiry: **{details.get('ssl_days_left', 'N/A')} days**")
-                       if details.get('ssl_is_new') == "Yes":
-                         st.warning("⚠️ Certificate is very new (issued in the last 30 days).")
-                         if details.get('ssl_issuer_warning'):
+                        st.info(f"Issuer: **{details['ssl_issuer']}**")
+                        st.write(f"Valid from: `{details.get('ssl_valid_from', 'N/A')}` to `{details.get('ssl_valid_to', 'N/A')}`")
+                        st.write(f"Certificate age: **{details.get('ssl_age_days', 'N/A')} days**")
+                        st.write(f"Days left until expiry: **{details.get('ssl_days_left', 'N/A')} days**")
+                        if details.get('ssl_is_new') == "Yes":
+                            st.warning("⚠️ Certificate is very new (issued in the last 30 days).")
+                        if details.get('ssl_issuer_warning'):
                             st.warning(f"⚠️ {details['ssl_issuer_warning']}")
-                         else:
-                            st.info("No SSL/TLS certificate details available.")
-
-                            st.subheader("Typosquatting & Lookalike Domain Check")
-                         if details.get('lookalike_brands'):
-                            st.warning(f"This domain is a lookalike or typo of: {', '.join(details['lookalike_brands'])}")
-                         else:
-                            st.success("No lookalike or typosquatting detected for popular brands.")
-
-                            st.subheader("Discovered Paths")
-                            found_paths = details.get('found_paths', [])
-                            if found_paths:
-                             st.markdown("<div class='paths-list'><ul>", unsafe_allow_html=True)
-                            for path in found_paths:
-                              st.markdown(f"<li><code>{url.rstrip('/')}{path}</code></li>", unsafe_allow_html=True)
-                              st.markdown("</ul></div>", unsafe_allow_html=True)
                     else:
-                      st.warning("No common paths discovered")
+                        st.info("No SSL/TLS certificate details available.")
+
+                    # --- Typosquatting & Lookalike Domain Check ---
+                    st.subheader("Typosquatting & Lookalike Domain Check")
+                    if details.get('lookalike_brands'):
+                        st.warning(f"This domain is a lookalike or typo of: {', '.join(details['lookalike_brands'])}")
+                    else:
+                        st.success("No lookalike or typosquatting detected for popular brands.")
+
+                    # --- Discovered Paths ---
+                    st.subheader("Discovered Paths")
+                    found_paths = details.get('found_paths', [])
+                    if found_paths:
+                        st.markdown("<div class='paths-list'><ul>", unsafe_allow_html=True)
+                        for path in found_paths:
+                            st.markdown(f"<li><code>{url.rstrip('/')}{path}</code></li>", unsafe_allow_html=True)
+                        st.markdown("</ul></div>", unsafe_allow_html=True)
+                    else:
+                        st.warning("No common paths discovered")
 
                     # --- Port Scan Section ---
                     if port_scan_enabled:
-                      st.subheader(f"Port Scan Results ({port_range[0]}–{port_range[1]})")
-                      parsed_url = urlparse(url)
-                      domain = parsed_url.netloc if parsed_url.netloc else parsed_url.path  # fallback for bare domains
-                      with st.spinner("Scanning ports... (this may take a while)"):
-                       open_ports, closed_ports, error = port_scan(domain, port_range)
-                       if error:
-                         st.error(error)
-                       else:
-                        st.markdown("<div class='ports-list'><ul>", unsafe_allow_html=True)
-                       if open_ports:
-                        st.markdown("<li><strong>Open Ports:</strong></li>", unsafe_allow_html=True)
-                       for port, service in open_ports:
-                          st.markdown(
-                        f"<li style='margin-left:20px;'><strong>Port {port}:</strong> "
-                        f"<span style='color:green;'>OPEN</span> &nbsp; <em>({service})</em></li>",
-                        unsafe_allow_html=True)
-                       else:
-                        st.markdown("<li><strong>No open ports found in the scanned range.</strong></li>", unsafe_allow_html=True)
+                        st.subheader(f"Port Scan Results ({port_range[0]}–{port_range[1]})")
+                        parsed_url = urlparse(url)
+                        domain = parsed_url.netloc if parsed_url.netloc else parsed_url.path
+                        with st.spinner("Scanning ports... (this may take a while)"):
+                            open_ports, closed_ports, error = port_scan(domain, port_range)
+                            if error:
+                                st.error(error)
+                            else:
+                                st.markdown("<div class='ports-list'><ul>", unsafe_allow_html=True)
+                                if open_ports:
+                                    st.markdown("<li><strong>Open Ports:</strong></li>", unsafe_allow_html=True)
+                                    for port, service in open_ports:
+                                        st.markdown(
+                                            f"<li style='margin-left:20px;'><strong>Port {port}:</strong> "
+                                            f"<span style='color:green;'>OPEN</span> &nbsp; <em>({service})</em></li>",
+                                            unsafe_allow_html=True
+                                        )
+                                else:
+                                    st.markdown("<li><strong>No open ports found in the scanned range.</strong></li>", unsafe_allow_html=True)
 
-                      if closed_ports:
-                        st.markdown("<li><strong>Closed Ports (showing up to 20):</strong></li>", unsafe_allow_html=True)
-                      for port in closed_ports[:20]:
-                       st.markdown(
-                        f"<li style='margin-left:20px;'><strong>Port {port}:</strong> "
-                        f"<span style='color:red;'>CLOSED</span></li>",
-                        unsafe_allow_html=True                    )
-                      if len(closed_ports) > 20:
-                       st.markdown(
-                        f"<li style='margin-left:20px;'><em>...and {len(closed_ports)-20} more closed ports</em></li>",
-                        unsafe_allow_html=True                    )
-                       st.markdown("</ul></div>", unsafe_allow_html=True)
+                                if closed_ports:
+                                    st.markdown("<li><strong>Closed Ports (showing up to 20):</strong></li>", unsafe_allow_html=True)
+                                    for port in closed_ports[:20]:
+                                        st.markdown(
+                                            f"<li style='margin-left:20px;'><strong>Port {port}:</strong> "
+                                            f"<span style='color:red;'>CLOSED</span></li>",
+                                            unsafe_allow_html=True
+                                        )
+                                    if len(closed_ports) > 20:
+                                        st.markdown(
+                                            f"<li style='margin-left:20px;'><em>...and {len(closed_ports)-20} more closed ports</em></li>",
+                                            unsafe_allow_html=True
+                                        )
+                                st.markdown("</ul></div>", unsafe_allow_html=True)
 
-
+                    # --- Feedback Section ---
                     st.subheader("Feedback")
                     feedback = st.radio("Was this prediction accurate?", ("Yes", "No"), horizontal=True)
                     comments = st.text_area("Additional Comments")
@@ -805,6 +811,7 @@ def main():
                             domain = parsed_url.netloc
                             add_to_blacklist(domain)
 
+                    # --- Community Reporting Section ---
                     st.subheader("Community Reporting")
                     parsed_url = urlparse(url)
                     domain = parsed_url.netloc
@@ -819,8 +826,6 @@ def main():
                         if st.button("Report as Safe", key="report_safe"):
                             add_community_vote(domain, "safe")
                             st.success("Thank you for reporting! (Safe)")
-
-
             else:
                 st.warning("Please enter a valid URL")
 
@@ -834,10 +839,16 @@ def main():
                 st.subheader("Text Analysis Results")
                 col1, col2 = st.columns(2)
                 with col1:
-                    st.markdown(f"<div class='metric-container'><h3>Risk Score</h3><p style='font-size: 2rem; font-weight: bold;'>{result['risk_score']}/100</p></div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='metric-container'><h3>Risk Score</h3><p style='font-size: 2rem; font-weight: bold;'>{result['risk_score']}/100</p></div>",
+                        unsafe_allow_html=True
+                    )
                 with col2:
                     color = "#dc3545" if "Highly" in result['risk_label'] else "#ffc107" if "Likely" in result['risk_label'] else "#28a745"
-                    st.markdown(f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {color};'>{result['risk_label']}</p></div>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {color};'>{result['risk_label']}</p></div>",
+                        unsafe_allow_html=True
+                    )
                 st.subheader("Detected Issues")
                 if result['keywords']:
                     st.warning(f"Phishing keywords detected: {', '.join(result['keywords'])}")
@@ -854,10 +865,9 @@ def main():
             else:
                 st.info("Paste some text to analyze.")
 
-
-                # --- Phishing Awareness Quiz Tab ---
+    # --- Phishing Awareness Quiz Tab ---
     with tab3:
         phishing_quiz()
 
 if __name__ == "__main__":
-  main()
+    main()
