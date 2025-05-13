@@ -702,7 +702,8 @@ def main():
                       with st.spinner("Taking screenshot..."):
                        screenshot, screenshot_error = take_screenshot(url)
                       if screenshot:
-                       st.image(screenshot, caption="Website Screenshot", use_column_width=True)
+                       st.image(screenshot, caption="Website Screenshot", use_container_width=True)
+
                       else:
                         st.warning("Screenshot unavailable." + (f" Error: {screenshot_error}" if screenshot_error else ""))
                     else:
