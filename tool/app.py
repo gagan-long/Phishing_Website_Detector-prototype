@@ -657,9 +657,9 @@ def main():
                             unsafe_allow_html=True
                         )
                     with col2:
-                        st.markdown(
+                         st.markdown(
                             f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {pred_color};'>{prediction}</p></div>",
-                            unsafe_allow_html=True
+                         unsafe_allow_html=True
                         )
 
                     # --- VirusTotal Threat Intelligence ---
@@ -844,12 +844,9 @@ def main():
                         unsafe_allow_html=True
                     )
                 with col2:
-                    color = "#dc3545" if "Highly" in result['risk_label'] else "#ffc107" if "Likely" in result['risk_label'] else "#28a745"
-                    st.markdown(
-                        f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {color};'>{result['risk_label']}</p></div>",
-                        unsafe_allow_html=True
-                    )
-                st.subheader("Detected Issues")
+                    color = "#dc3545" if "Highly" in result['risk_label'] else "#ffc107" if "Likely" in result['risk_label'] else "#28a745" 
+                    st.markdown(f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {color};'>{result['risk_label']}</p></div>",unsafe_allow_html=True )
+                    st.subheader("Detected Issues")
                 if result['keywords']:
                     st.warning(f"Phishing keywords detected: {', '.join(result['keywords'])}")
                 else:
