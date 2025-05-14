@@ -26,6 +26,12 @@ from selenium.webdriver.chrome.service import Service
 
 
 
+import re
+
+def extract_links(text):
+    # Regex for URLs (http, https, www)
+    url_pattern = r'(https?://\S+|www\.\S+)'
+    return re.findall(url_pattern, text)
 
 
 def extract_dom_clues(url, timeout=10):
@@ -602,6 +608,30 @@ def analyze_text(text):
         "keywords": found_keywords,
         "links": found_links,
         "brands": found_brands
+    }
+    
+    links = extract_links(text)
+    # Example risk logic (customize as needed)
+    risk_score = 0
+    keywords = [kw for kw in ["verify", "account", "password", "urgent"] if kw in text.lower()]
+    brands = [b for b in ["PayPal", "Amazon", "Google"] if b.lower() in text.lower()]
+    if keywords:
+        risk_score += 30
+    if links:
+        risk_score += 20
+    if brands:
+        risk_score += 10
+    risk_label = (
+        "Highly Likely Phishing" if risk_score > 50 else
+        "Likely Phishing" if risk_score > 30 else
+        "Potentially Safe"
+    )
+    return {
+        "risk_score": risk_score,
+        "risk_label": risk_label,
+        "keywords": keywords,
+        "links": links,
+        "brands": brands
     }
 
 def main():
