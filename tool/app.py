@@ -831,36 +831,78 @@ def main():
 
     # --- Text/Message Tab ---
     with tab2:
-        st.write("Paste any suspicious email, SMS, or message below to check for phishing risk.")
-        text = st.text_area("Paste your message or email here:", height=180)
-        if st.button("Analyze Text", key="analyze_text"):
-            if text.strip():
-                result = analyze_text(text)
-                st.subheader("Text Analysis Results")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.markdown(
-                        f"<div class='metric-container'><h3>Risk Score</h3><p style='font-size: 2rem; font-weight: bold;'>{result['risk_score']}/100</p></div>",
-                        unsafe_allow_html=True
-                    )
-                with col2:
-                    color = "#dc3545" if "Highly" in result['risk_label'] else "#ffc107" if "Likely" in result['risk_label'] else "#28a745" 
-                    st.markdown(f"<div class='metric-container'><h3>Prediction</h3><p style='font-size: 2rem; font-weight: bold; color: {color};'>{result['risk_label']}</p></div>",unsafe_allow_html=True )
-                    st.subheader("Detected Issues")
-                if result['keywords']:
-                    st.warning(f"Phishing keywords detected: {', '.join(result['keywords'])}")
-                else:
-                    st.success("No phishing keywords detected.")
-                if result['links']:
-                    st.warning(f"Suspicious links found: {', '.join(result['links'])}")
-                else:
-                    st.success("No suspicious links found.")
-                if result['brands']:
-                    st.warning(f"Brand names detected: {', '.join(result['brands'])}")
-                else:
-                    st.info("No popular brand names detected.")
+      st.markdown("## ✉️ Text/Message Analysis")
+      st.write("Paste any suspicious email, SMS, or message below to check for phishing risk.")
+
+    text = st.text_area(
+        "Paste your message or email here:",
+        height=180,
+        placeholder="e.g. 'Dear user, your account is locked. Click here to verify...'"
+    )
+
+    if st.button("Analyze Text", key="analyze_text"):
+        if text.strip():
+            result = analyze_text(text)
+            st.subheader("Text Analysis Results")
+
+            # --- Risk Score & Prediction ---
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(
+                    f"<div class='metric-container'><h3>Risk Score</h3>"
+                    f"<p style='font-size: 2rem; font-weight: bold; color:#ff4b4b;'>{result.get('risk_score', 0)}/100</p></div>",
+                    unsafe_allow_html=True
+                )
+            with col2:
+                risk_label = result.get('risk_label', 'Unknown')
+                color = "#dc3545" if "Highly" in risk_label else "#ffc107" if "Likely" in risk_label else "#28a745"
+                emoji = "🔴" if "Highly" in risk_label else "🟡" if "Likely" in risk_label else "🟢"
+                st.markdown(
+                    f"<div class='metric-container'><h3>Prediction</h3>"
+                    f"<p style='font-size: 2rem; font-weight: bold; color: {color};'>{emoji} {risk_label}</p></div>",
+                    unsafe_allow_html=True
+                )
+
+            # --- Detected Issues ---
+            st.markdown("---")
+            st.subheader("Detected Issues")
+
+            # Phishing Keywords
+            keywords = result.get('keywords', [])
+            if keywords:
+                st.warning(f"**Phishing keywords detected:**<br> {', '.join(keywords)}", icon="⚠️")
             else:
-                st.info("Paste some text to analyze.")
+                st.success("No phishing keywords detected.", icon="✅")
+
+            # Suspicious Links
+            links = result.get('links', [])
+            if links:
+                st.warning("**Suspicious links found:**", icon="🔗")
+                for l in links:
+                    # Make each link clickable
+                    st.markdown(f"- [🔗 {l}]({l})", unsafe_allow_html=True)
+            else:
+                st.success("No suspicious links found.", icon="🔒")
+
+            # Brand Names
+            brands = result.get('brands', [])
+            if brands:
+                st.info(f"**Brand names detected:**<br> {', '.join(brands)}", icon="🏢")
+            else:
+                st.info("No popular brand names detected.", icon="ℹ️")
+
+            # Suggestions
+            st.markdown("---")
+            st.subheader("What should you do?")
+            if result.get('risk_score', 0) > 50:
+                st.error("**Do NOT click any links or provide information.** This message is highly suspicious and may be a phishing attempt.")
+            elif result.get('risk_score', 0) > 30:
+                st.warning("**Be cautious.** This message has several suspicious signs. Double-check the sender and avoid clicking links.")
+            else:
+                st.success("This message appears safe, but always stay alert for phishing attempts.")
+        else:
+            st.info("Paste some text to analyze.")
+
 
     # --- Phishing Awareness Quiz Tab ---
     with tab3:
