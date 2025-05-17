@@ -314,7 +314,7 @@ def check_virustotal_url(url, api_key):
 # --- Blacklist Data ---
 def load_blacklist():
     try:
-        with open('blacklist.json', 'r') as f:
+        with open('tool/blacklist.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
         return []
@@ -322,7 +322,7 @@ def load_blacklist():
         return []
 
 def save_blacklist(blacklist):
-    with open('blacklist.json', 'w') as f:
+    with open('tool/blacklist.json', 'w') as f:
         json.dump(blacklist, f, indent=2)
 
 def add_to_blacklist(domain):
