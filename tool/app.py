@@ -334,9 +334,34 @@ def add_to_blacklist(domain):
 
 # --- Typosquatting & Lookalike Detection ---
 POPULAR_BRANDS = [
-    "google.com", "facebook.com", "apple.com", "amazon.com", "microsoft.com",
-    "paypal.com", "bankofamerica.com", "wellsfargo.com", "github.com", "twitter.com"
+    # Tech & Email
+    "google.com", "gmail.com", "youtube.com", "apple.com", "icloud.com", "microsoft.com", "outlook.com", "office.com", "live.com",
+    "yahoo.com", "aol.com", "protonmail.com", "zoho.com", "mail.com", "gmx.com",
+
+    # Social Media & Messaging
+    "facebook.com", "instagram.com", "whatsapp.com", "messenger.com", "twitter.com", "linkedin.com", "tiktok.com", "snapchat.com",
+    "reddit.com", "pinterest.com", "discord.com", "telegram.org", "slack.com",
+
+    # Shopping & Payments
+    "amazon.com", "ebay.com", "alibaba.com", "aliexpress.com", "walmart.com", "flipkart.com", "shopify.com",
+    "paypal.com", "stripe.com", "square.com", "paytm.com", "venmo.com", "skrill.com",
+
+    # Banks & Financial
+    "bankofamerica.com", "wellsfargo.com", "chase.com", "citibank.com", "capitalone.com", "americanexpress.com",
+    "hsbc.com", "barclays.com", "td.com", "usbank.com", "boa.com", "discover.com",
+
+    # Developer & Cloud
+    "github.com", "gitlab.com", "bitbucket.org", "digitalocean.com", "aws.amazon.com", "azure.com", "cloudflare.com",
+    "heroku.com", "netlify.com", "vercel.com", "dropbox.com", "box.com", "drive.google.com",
+
+    # Government & Health
+    "irs.gov", "gov.uk", "usa.gov", "nhs.uk", "cdc.gov", "who.int",
+
+    # Others
+    "netflix.com", "spotify.com", "hulu.com", "zoom.us", "uber.com", "airbnb.com", "booking.com", "expedia.com",
+    "wordpress.com", "medium.com", "quora.com", "tumblr.com", "salesforce.com"
 ]
+
 
 def generate_typos(domain):
     typos = set()
@@ -389,14 +414,32 @@ def crawl_website(target_url):
         except:
             return None
     common_dirs = [
-        'admin', 'login', 'wp-admin', 'wp-content', 
-        'images', 'css', 'js', 'assets', 'uploads',
-        'backup', 'api', 'secret', 'private'
+        'admin', 'login', 'dashboard', 'controlpanel', 
+        'wp-admin', 'wp-content', 'wp-includes', 'wp-login',
+        'images', 'css', 'js', 'assets', 'uploads', 'media',
+        'backup', 'backups', 'api', 'secret', 'private', 
+        'tmp', 'temp', 'logs', 'sql', 'db', 'database',
+        'cgi-bin', 'includes', 'src', 'lib', 'config',
+        'vendor', 'node_modules', '.git', '.svn', '.hg'
     ]
+
     common_files = [
-        'robots.txt', 'sitemap.xml', 'config.php',
-        '.env', 'package.json', 'web.config'
+    'robots.txt', 'sitemap.xml', 'sitemap_index.xml',
+    'config.php', 'wp-config.php', 'config.json', 
+    'config.yml', 'config.ini', 'settings.py',
+    '.env', '.env.example', '.env.local', 
+    'package.json', 'package-lock.json', 'yarn.lock',
+    'composer.json', 'composer.lock', 'Gemfile',
+    'web.config', '.htaccess', 'htpasswd',
+    'Dockerfile', 'docker-compose.yml', 'docker-compose.yaml',
+    'error.log', 'access.log', 'debug.log',
+    'backup.sql', 'dump.sql', 'backup.zip', 
+    'crossdomain.xml', 'security.txt', 'phpinfo.php',
+    'LICENSE.txt', 'README.md', 'CHANGELOG.txt',
+    '.DS_Store', 'Thumbs.db', 'desktop.ini',
+    'service-worker.js', 'manifest.json'
     ]
+
     with ThreadPoolExecutor(max_workers=10) as executor:
         dir_paths = [f"/{d}/" for d in common_dirs]
         found_paths.update(filter(None, executor.map(check_path, dir_paths)))
