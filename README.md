@@ -74,7 +74,6 @@ Go to - https://phishingwebsitedetector-prototype-o3xtyexgblxajfoawjfzrx.streaml
 
 [![Watch the Demo](https://img.shields.io/badge/YouTube-Demo%20Video-red?logo=youtube)](https://youtu.be/syWq5gx05mE)
 
-<iframe src="https://www.w3schools.com" title="W3Schools Free Online Web Tutorials"></iframe>
 ---
 
 ## 📸 Screenshots
